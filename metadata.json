@@ -1,0 +1,5 @@
+{
+  "name": "Ready2Learn",
+  "description": "An AI-powered educational agent that converts PDFs into structured, interactive virtual video lessons and quizzes.",
+  "requestFramePermissions": []
+}
