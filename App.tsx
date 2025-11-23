@@ -358,194 +358,199 @@ const App: React.FC = () => {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
-  if (appState === AppState.UPLOAD || appState === AppState.ANALYZING) {
-    return (
-      <div className="relative">
-          <button 
-            onClick={handleLogout}
-            className="absolute top-4 right-4 z-50 text-slate-500 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm transition-colors"
-          >
-            <LogOut size={18} /> <span className="text-sm font-medium">Log out</span>
-          </button>
-          <FileUpload 
-            onFileSelected={handleFileUpload} 
-            isProcessing={appState === AppState.ANALYZING} 
-            currentCourseTitle={courseStructure?.title}
-            onReset={handleReset}
-            error={uploadError}
-          />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-950 overflow-hidden font-sans">
-      
-      <TutorSettings 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        currentProfile={tutorProfile}
-        onSave={setTutorProfile}
-      />
-
-      <FeedbackModal 
-        isOpen={feedbackModalOpen}
-        onClose={() => setFeedbackModalOpen(false)}
-        type={feedbackType}
-        title={currentTopic?.title || ""}
-        onSubmit={handleFeedbackSubmit}
-      />
-
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}>
-          <div 
-            className="w-4/5 max-w-xs h-full bg-slate-900 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex justify-end p-4 border-b border-slate-800">
-                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-white">
-                    <X size={24} />
-                </button>
-            </div>
-            <CourseOutline 
-                chapters={courseStructure?.chapters || []}
-                currentTopicId={currentTopic?.id || null}
-                onSelectTopic={handleTopicSelect}
-                courseTitle={courseStructure?.title || "Course"}
-                progress={calculateProgress()}
+  // Helper to wrap the main content area
+  const renderContent = () => {
+      if (appState === AppState.UPLOAD || appState === AppState.ANALYZING) {
+        return (
+          <div className="relative min-h-[100dvh]">
+              <button 
+                onClick={handleLogout}
+                className="absolute top-4 right-4 z-50 text-slate-500 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm transition-colors"
+              >
+                <LogOut size={18} /> <span className="text-sm font-medium">Log out</span>
+              </button>
+              <FileUpload 
+                onFileSelected={handleFileUpload} 
+                isProcessing={appState === AppState.ANALYZING} 
+                currentCourseTitle={courseStructure?.title}
                 onReset={handleReset}
-            />
+                error={uploadError}
+              />
           </div>
-        </div>
-      )}
+        );
+      }
 
-      <div className="hidden md:block h-full flex-shrink-0">
-        <CourseOutline 
-          chapters={courseStructure?.chapters || []}
-          currentTopicId={currentTopic?.id || null}
-          onSelectTopic={handleTopicSelect}
-          courseTitle={courseStructure?.title || "Course"}
-          progress={calculateProgress()}
-          onReset={handleReset}
-        />
-      </div>
-
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
-        {/* Header */}
-        <header className="h-16 flex-shrink-0 border-b border-slate-800 flex items-center justify-between px-4 md:px-8 bg-slate-950/80 backdrop-blur z-10">
-          <div className="flex items-center gap-4">
-             <button 
-               className="md:hidden text-slate-400 hover:text-white"
-               onClick={() => setIsSidebarOpen(true)}
-             >
-               <Menu size={24} />
-             </button>
-             <div className="flex flex-col">
-                <h2 className="text-sm md:text-lg font-medium text-slate-200 truncate max-w-[200px] md:max-w-none">
-                    {appState === AppState.DASHBOARD && `Hello, ${currentUser.username}`}
-                    {appState === AppState.LESSON && `${currentTopic?.title}`}
-                    {appState === AppState.QUIZ && `Quiz: ${currentTopic?.title}`}
-                </h2>
-             </div>
-          </div>
+      return (
+        <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-slate-950 overflow-hidden font-sans">
           
-          <div className="flex items-center gap-3">
-             {/* Tutor Profile Trigger */}
-             <button 
-               onClick={() => setIsSettingsOpen(true)}
-               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 transition-all group"
-               title="Configure Tutor"
-             >
-                <UserCircle2 size={18} />
-                <span className="text-xs font-semibold hidden sm:inline">{tutorProfile.name}</span>
-                <Settings size={14} className="group-hover:rotate-45 transition-transform opacity-50" />
-             </button>
+          <TutorSettings 
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            currentProfile={tutorProfile}
+            onSave={setTutorProfile}
+          />
 
-             {appState !== AppState.DASHBOARD && (
-               <button 
-                 onClick={() => setAppState(AppState.DASHBOARD)}
-                 className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-               >
-                 Exit Lesson
-               </button>
-             )}
+          <FeedbackModal 
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            type={feedbackType}
+            title={currentTopic?.title || ""}
+            onSubmit={handleFeedbackSubmit}
+          />
 
-             <button 
-               onClick={handleLogout}
-               className="text-slate-500 hover:text-red-400 transition-colors p-2"
-               title="Logout"
-             >
-               <LogOut size={18} />
-             </button>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
-            {appState === AppState.DASHBOARD && (
-               <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
-                  <div className="relative group cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
-                    <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full group-hover:bg-indigo-500/30 transition-all"></div>
-                    <div className="relative w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
-                       <span className="text-5xl">
-                          {tutorProfile.gender === 'Male' ? '👨‍🏫' : '👩‍🏫'}
-                       </span>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 bg-slate-800 border border-slate-600 rounded-full p-1.5 text-xs text-white">
-                       <Settings size={12} />
-                    </div>
-                  </div>
-                  <div>
-                      <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Ready to Learn, {currentUser.username}?</h1>
-                      <p className="text-slate-400 max-w-md mx-auto text-sm md:text-base mb-4">
-                        Select a topic to begin your lesson with 
-                        <span className="text-indigo-400 font-semibold"> {tutorProfile.name}</span>, 
-                        your {tutorProfile.region} AI tutor.
-                      </p>
-                  </div>
-                  
-                  <button 
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-lg shadow-indigo-500/20"
-                  >
-                    View Topics
-                  </button>
-               </div>
-            )}
-
-            {appState === AppState.LESSON && currentTopic && (
-              <div className="animate-in slide-in-from-bottom-4 duration-500">
-                <LessonPlayer 
-                    topic={currentTopic} 
-                    state={lessonState} 
-                    onComplete={startQuiz} 
-                    onFeedback={() => openFeedbackModal('lesson')}
+          {isSidebarOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}>
+              <div 
+                className="w-4/5 max-w-xs h-full bg-slate-900 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex justify-end p-4 border-b border-slate-800">
+                    <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-white">
+                        <X size={24} />
+                    </button>
+                </div>
+                <CourseOutline 
+                    chapters={courseStructure?.chapters || []}
+                    currentTopicId={currentTopic?.id || null}
+                    onSelectTopic={handleTopicSelect}
+                    courseTitle={courseStructure?.title || "Course"}
+                    progress={calculateProgress()}
+                    onReset={handleReset}
                 />
               </div>
-            )}
+            </div>
+          )}
 
-            {appState === AppState.QUIZ && (
-               <div className="animate-in slide-in-from-right-4 duration-500">
-                   <QuizView 
-                     questions={quizQuestions}
-                     onFinish={handleQuizFinish}
-                     onFeedback={() => openFeedbackModal('quiz')}
-                   />
-               </div>
-            )}
-        </div>
-        
-        {quizLoading && (
-             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50">
-                 <div className="text-center p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
-                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                     <h3 className="text-white font-bold text-lg">Generating Quiz</h3>
-                     <p className="text-slate-400 text-sm">Analyzing content...</p>
+          <div className="hidden md:block h-full flex-shrink-0">
+            <CourseOutline 
+              chapters={courseStructure?.chapters || []}
+              currentTopicId={currentTopic?.id || null}
+              onSelectTopic={handleTopicSelect}
+              courseTitle={courseStructure?.title || "Course"}
+              progress={calculateProgress()}
+              onReset={handleReset}
+            />
+          </div>
+
+          <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
+            {/* Header */}
+            <header className="h-16 flex-shrink-0 border-b border-slate-800 flex items-center justify-between px-4 md:px-8 bg-slate-950/80 backdrop-blur z-10">
+              <div className="flex items-center gap-4">
+                 <button 
+                   className="md:hidden text-slate-400 hover:text-white"
+                   onClick={() => setIsSidebarOpen(true)}
+                 >
+                   <Menu size={24} />
+                 </button>
+                 <div className="flex flex-col">
+                    <h2 className="text-sm md:text-lg font-medium text-slate-200 truncate max-w-[200px] md:max-w-none">
+                        {appState === AppState.DASHBOARD && `Hello, ${currentUser.username}`}
+                        {appState === AppState.LESSON && `${currentTopic?.title}`}
+                        {appState === AppState.QUIZ && `Quiz: ${currentTopic?.title}`}
+                    </h2>
                  </div>
-             </div>
-        )}
-      </main>
-    </div>
-  );
+              </div>
+              
+              <div className="flex items-center gap-3">
+                 {/* Tutor Profile Trigger */}
+                 <button 
+                   onClick={() => setIsSettingsOpen(true)}
+                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 transition-all group"
+                   title="Configure Tutor"
+                 >
+                    <UserCircle2 size={18} />
+                    <span className="text-xs font-semibold hidden sm:inline">{tutorProfile.name}</span>
+                    <Settings size={14} className="group-hover:rotate-45 transition-transform opacity-50" />
+                 </button>
+
+                 {appState !== AppState.DASHBOARD && (
+                   <button 
+                     onClick={() => setAppState(AppState.DASHBOARD)}
+                     className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                   >
+                     Exit Lesson
+                   </button>
+                 )}
+
+                 <button 
+                   onClick={handleLogout}
+                   className="text-slate-500 hover:text-red-400 transition-colors p-2"
+                   title="Logout"
+                 >
+                   <LogOut size={18} />
+                 </button>
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+                {appState === AppState.DASHBOARD && (
+                   <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                      <div className="relative group cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
+                        <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full group-hover:bg-indigo-500/30 transition-all"></div>
+                        <div className="relative w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
+                           <span className="text-5xl">
+                              {tutorProfile.gender === 'Male' ? '👨‍🏫' : '👩‍🏫'}
+                           </span>
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-slate-800 border border-slate-600 rounded-full p-1.5 text-xs text-white">
+                           <Settings size={12} />
+                        </div>
+                      </div>
+                      <div>
+                          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Ready to Learn, {currentUser.username}?</h1>
+                          <p className="text-slate-400 max-w-md mx-auto text-sm md:text-base mb-4">
+                            Select a topic to begin your lesson with 
+                            <span className="text-indigo-400 font-semibold"> {tutorProfile.name}</span>, 
+                            your {tutorProfile.region} AI tutor.
+                          </p>
+                      </div>
+                      
+                      <button 
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="md:hidden px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-lg shadow-indigo-500/20"
+                      >
+                        View Topics
+                      </button>
+                   </div>
+                )}
+
+                {appState === AppState.LESSON && currentTopic && (
+                  <div className="animate-in slide-in-from-bottom-4 duration-500">
+                    <LessonPlayer 
+                        topic={currentTopic} 
+                        state={lessonState} 
+                        onComplete={startQuiz} 
+                        onFeedback={() => openFeedbackModal('lesson')}
+                    />
+                  </div>
+                )}
+
+                {appState === AppState.QUIZ && (
+                   <div className="animate-in slide-in-from-right-4 duration-500">
+                       <QuizView 
+                         questions={quizQuestions}
+                         onFinish={handleQuizFinish}
+                         onFeedback={() => openFeedbackModal('quiz')}
+                       />
+                   </div>
+                )}
+            </div>
+            
+            {quizLoading && (
+                 <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50">
+                     <div className="text-center p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                         <h3 className="text-white font-bold text-lg">Generating Quiz</h3>
+                         <p className="text-slate-400 text-sm">Analyzing content...</p>
+                     </div>
+                 </div>
+            )}
+          </main>
+        </div>
+      );
+  }
+
+  return renderContent();
 };
 
 export default App;
