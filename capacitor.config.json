@@ -1,0 +1,19 @@
+{
+  "appId": "com.ready2learn.app",
+  "appName": "Ready2Learn",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#020617"
+    }
+  }
+}

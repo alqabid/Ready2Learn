@@ -49,12 +49,14 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
     if (state.audioUrl && audioRef.current) {
       audioRef.current.src = state.audioUrl;
       audioRef.current.load();
-      // Attempt autoplay
+      // Mobile browsers block autoplay often, so we don't auto-play unless triggered by user gesture.
+      // However, if the user clicked a topic to get here, we might be able to play if loading was fast.
+      // For safety in hybrid apps, we let the user press play, or try catching the error.
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => setIsPlaying(true))
-          .catch(e => console.log("Autoplay waiting for interaction"));
+          .catch(e => console.log("Autoplay prevented by policy, waiting for interaction"));
       }
     }
   }, [state.audioUrl]);
@@ -162,11 +164,11 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pb-12">
       {/* Video Player Container */}
-      <div className="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 group ring-1 ring-white/5">
+      <div className="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 group ring-1 ring-white/5 touch-none">
         
         {/* Ambient Background Blur */}
         {state.imageUrl && (
-            <div className="absolute inset-0 opacity-40">
+            <div className="absolute inset-0 opacity-40 pointer-events-none">
                 <img 
                     src={state.imageUrl} 
                     alt="Background Ambience"
@@ -177,7 +179,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
 
         {/* Visual Content with Ken Burns Effect */}
         {state.imageUrl ? (
-            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
                 <img 
                     src={state.imageUrl} 
                     alt="Lesson Visual" 
@@ -195,27 +197,27 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
         {/* Gradient Overlay for UI readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/30 pointer-events-none"></div>
 
-        {/* Captions Overlay */}
-        <div className="absolute bottom-24 left-0 right-0 px-6 md:px-12 text-center z-20 pointer-events-none">
-           <div className="inline-block bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/5 shadow-xl transform transition-all hover:scale-105">
-             <p className="text-white/90 text-lg md:text-xl font-medium leading-relaxed">
+        {/* Captions Overlay - Responsive Text */}
+        <div className="absolute bottom-28 lg:bottom-24 left-0 right-0 px-6 md:px-12 text-center z-20 pointer-events-none">
+           <div className="inline-block bg-black/60 backdrop-blur-md p-3 md:p-4 rounded-xl border border-white/5 shadow-xl transform transition-all">
+             <p className="text-white/90 text-sm md:text-xl font-medium leading-relaxed line-clamp-2">
                "{state.content?.keyPoints[0] || topic.description}"
              </p>
            </div>
         </div>
 
         {/* Controls Toolbar */}
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl p-4 flex flex-col gap-3 border-t border-white/10 z-30">
+        <div className="absolute bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl p-3 md:p-4 flex flex-col gap-3 border-t border-white/10 z-30">
             {/* Progress Bar */}
             <div 
-                className="w-full bg-slate-800 h-1.5 rounded-full cursor-pointer group/bar hover:h-2.5 transition-all"
+                className="w-full bg-slate-800 h-2 md:h-1.5 rounded-full cursor-pointer group/bar transition-all touch-none py-1"
                 onClick={handleSeek}
             >
                 <div 
                     className="bg-indigo-500 h-full rounded-full relative transition-all" 
                     style={{ width: `${progress}%` }}
                 >
-                    <div className="absolute right-0 -top-1.5 w-4 h-4 bg-white rounded-full opacity-0 group-hover/bar:opacity-100 shadow-[0_0_10px_rgba(255,255,255,0.5)] transform scale-0 group-hover/bar:scale-100 transition-all"></div>
+                    <div className="absolute right-0 -top-1.5 w-4 h-4 bg-white rounded-full opacity-100 md:opacity-0 md:group-hover/bar:opacity-100 shadow-[0_0_10px_rgba(255,255,255,0.5)] md:transform md:scale-0 md:group-hover/bar:scale-100 transition-all"></div>
                 </div>
             </div>
             
@@ -223,7 +225,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={togglePlay}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-indigo-500 text-white transition-all hover:scale-110 active:scale-95"
+                        className="w-10 h-10 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-indigo-500 text-white transition-all active:scale-95"
                     >
                         {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1"/>}
                     </button>
@@ -232,14 +234,11 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
                         <span className="text-xs font-bold text-white tracking-wide font-mono">
                             {formatTime(audioRef.current?.currentTime || 0)} / {formatTime(duration)}
                         </span>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            {isPlaying ? <span className="animate-pulse text-indigo-400">● Live</span> : 'Paused'}
-                        </span>
                     </div>
 
-                    {/* Volume Control */}
+                    {/* Volume Control - Hidden on small mobile unless active */}
                     <div 
-                        className="relative flex items-center group/vol"
+                        className="relative hidden md:flex items-center group/vol"
                         onMouseEnter={() => setShowVolumeSlider(true)}
                         onMouseLeave={() => setShowVolumeSlider(false)}
                     >
@@ -272,7 +271,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
                     
                     <button 
                         onClick={onComplete}
-                        className="flex items-center gap-2 px-5 py-2 bg-white text-slate-900 hover:bg-indigo-400 hover:text-white text-sm font-bold rounded-full transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95"
+                        className="flex items-center gap-2 px-4 md:px-5 py-2 bg-white text-slate-900 hover:bg-indigo-400 hover:text-white text-sm font-bold rounded-full transition-all shadow-lg active:scale-95"
                     >
                         Start Quiz <ChevronRight size={16} />
                     </button>
@@ -281,10 +280,10 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
         </div>
       </div>
 
-      {/* Supplemental Content */}
+      {/* Supplemental Content - Stacked on Mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          {/* Interactive Transcript */}
-         <div className="lg:col-span-2 bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[500px]">
+         <div className="lg:col-span-2 bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[400px] md:h-[500px]">
             <div className="p-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-10 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
                     <FileText size={16} className="text-indigo-400"/> 
@@ -297,11 +296,11 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
             
             <div 
                 ref={transcriptRef}
-                className="p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 flex-1 relative scroll-smooth"
+                className="p-4 md:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 flex-1 relative scroll-smooth"
             >
                 <div className="space-y-6 max-w-3xl mx-auto">
                     {transcriptData.paragraphs.map((para, pIdx) => (
-                        <p key={pIdx} className="text-lg md:text-xl leading-loose text-slate-600">
+                        <p key={pIdx} className="text-base md:text-xl leading-relaxed md:leading-loose text-slate-600">
                             {para.words.map((word, wIdx) => {
                                 const globalIdx = para.start + wIdx;
                                 const isRead = globalIdx < currentWordIndex;
@@ -325,7 +324,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
                 </div>
                 
                 {/* Gradient fade at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-12 md:h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
             </div>
          </div>
 
@@ -346,28 +345,16 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ topic, state, onComp
                     </li>
                 ))}
             </ul>
-            
-            <div className="mt-8 pt-6 border-t border-slate-800">
-               <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-xl p-5 border border-indigo-500/20 relative overflow-hidden group cursor-pointer hover:border-indigo-500/40 transition-colors" onClick={onComplete}>
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/20 blur-2xl rounded-full group-hover:bg-indigo-500/30 transition-all"></div>
-                  <p className="text-xs text-indigo-300 mb-1 font-semibold uppercase tracking-wider">Up Next</p>
-                  <div className="flex items-center justify-between">
-                      <span className="text-white font-bold text-lg">Topic Quiz</span>
-                      <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center transform group-hover:translate-x-1 transition-transform">
-                          <ChevronRight size={18} />
-                      </div>
-                  </div>
-               </div>
-            </div>
          </div>
       </div>
 
-      {/* Hidden Audio Element */}
+      {/* Hidden Audio Element - Must be present in DOM (not display:none) for iOS playback control compatibility in some WebViews */}
       <audio 
         ref={audioRef} 
         onTimeUpdate={handleTimeUpdate} 
         onEnded={() => setIsPlaying(false)}
-        className="hidden"
+        className="absolute w-0 h-0 opacity-0 pointer-events-none"
+        playsInline
       />
     </div>
   );

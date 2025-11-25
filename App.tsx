@@ -362,26 +362,28 @@ const App: React.FC = () => {
   const renderContent = () => {
       if (appState === AppState.UPLOAD || appState === AppState.ANALYZING) {
         return (
-          <div className="relative min-h-[100dvh]">
+          <div className="relative h-full flex flex-col">
               <button 
                 onClick={handleLogout}
                 className="absolute top-4 right-4 z-50 text-slate-500 hover:text-white flex items-center gap-2 bg-slate-900/50 px-3 py-2 rounded-lg backdrop-blur-sm transition-colors"
               >
                 <LogOut size={18} /> <span className="text-sm font-medium">Log out</span>
               </button>
-              <FileUpload 
-                onFileSelected={handleFileUpload} 
-                isProcessing={appState === AppState.ANALYZING} 
-                currentCourseTitle={courseStructure?.title}
-                onReset={handleReset}
-                error={uploadError}
-              />
+              <div className="flex-1 overflow-y-auto">
+                 <FileUpload 
+                   onFileSelected={handleFileUpload} 
+                   isProcessing={appState === AppState.ANALYZING} 
+                   currentCourseTitle={courseStructure?.title}
+                   onReset={handleReset}
+                   error={uploadError}
+                 />
+              </div>
           </div>
         );
       }
 
       return (
-        <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-slate-950 overflow-hidden font-sans">
+        <div className="flex flex-col md:flex-row h-full w-full bg-slate-950 overflow-hidden font-sans">
           
           <TutorSettings 
             isOpen={isSettingsOpen}
@@ -399,9 +401,9 @@ const App: React.FC = () => {
           />
 
           {isSidebarOpen && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}>
+            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}>
               <div 
-                className="w-4/5 max-w-xs h-full bg-slate-900 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
+                className="w-4/5 max-w-xs h-full bg-slate-900 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex justify-end p-4 border-b border-slate-800">
@@ -434,16 +436,16 @@ const App: React.FC = () => {
 
           <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative h-full">
             {/* Header */}
-            <header className="h-16 flex-shrink-0 border-b border-slate-800 flex items-center justify-between px-4 md:px-8 bg-slate-950/80 backdrop-blur z-10">
+            <header className="h-16 flex-shrink-0 border-b border-slate-800 flex items-center justify-between px-4 md:px-8 bg-slate-950/80 backdrop-blur z-10 sticky top-0">
               <div className="flex items-center gap-4">
                  <button 
-                   className="md:hidden text-slate-400 hover:text-white"
+                   className="md:hidden text-slate-400 hover:text-white p-2 -ml-2"
                    onClick={() => setIsSidebarOpen(true)}
                  >
                    <Menu size={24} />
                  </button>
                  <div className="flex flex-col">
-                    <h2 className="text-sm md:text-lg font-medium text-slate-200 truncate max-w-[200px] md:max-w-none">
+                    <h2 className="text-sm md:text-lg font-medium text-slate-200 truncate max-w-[150px] md:max-w-none">
                         {appState === AppState.DASHBOARD && `Hello, ${currentUser.username}`}
                         {appState === AppState.LESSON && `${currentTopic?.title}`}
                         {appState === AppState.QUIZ && `Quiz: ${currentTopic?.title}`}
@@ -468,7 +470,7 @@ const App: React.FC = () => {
                      onClick={() => setAppState(AppState.DASHBOARD)}
                      className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                    >
-                     Exit Lesson
+                     Exit
                    </button>
                  )}
 
@@ -482,9 +484,9 @@ const App: React.FC = () => {
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-24 md:pb-8">
                 {appState === AppState.DASHBOARD && (
-                   <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                   <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in zoom-in duration-500 mt-10 md:mt-0">
                       <div className="relative group cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
                         <div className="absolute -inset-4 bg-indigo-500/20 blur-xl rounded-full group-hover:bg-indigo-500/30 transition-all"></div>
                         <div className="relative w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
@@ -497,19 +499,18 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <div>
-                          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Ready to Learn, {currentUser.username}?</h1>
+                          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Ready to Learn?</h1>
                           <p className="text-slate-400 max-w-md mx-auto text-sm md:text-base mb-4">
                             Select a topic to begin your lesson with 
-                            <span className="text-indigo-400 font-semibold"> {tutorProfile.name}</span>, 
-                            your {tutorProfile.region} AI tutor.
+                            <span className="text-indigo-400 font-semibold"> {tutorProfile.name}</span>.
                           </p>
                       </div>
                       
                       <button 
                         onClick={() => setIsSidebarOpen(true)}
-                        className="md:hidden px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-lg shadow-indigo-500/20"
+                        className="md:hidden px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-lg shadow-indigo-500/20 w-full max-w-xs"
                       >
-                        View Topics
+                        View Course Topics
                       </button>
                    </div>
                 )}
